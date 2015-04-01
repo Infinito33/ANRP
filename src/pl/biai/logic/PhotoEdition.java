@@ -132,11 +132,14 @@ public class PhotoEdition {
                 rects.add(rr);
             }
         }
+
+        //Wycina i zapisuje do plików wszystkie prostokąty, z czego jeden to tablica.
+        cutAndSavePossiblePlate(rects);
+
         //W tym momencie w liście "rects" mamy możliwe prostokąty, jeden z nich to tablica.
         //Dalej jest część z flood fillem ktorej nie ogarniam i jak na moje oko to zle narazie dziala.
         //Maska jest zapisywana do mask.jpg jak cos, result z niebieskimi kreskami w result.jpg
         //Możesz posprawdzać i pokombinować coś wedlug tej ksiazki.
-
         Mat result = new Mat();
         photoOriginal.copyTo(result);
         Imgproc.drawContours(result, contoursList, -1, new Scalar(255, 0, 0), 1);
@@ -203,8 +206,43 @@ public class PhotoEdition {
         System.out.println("Wykryto tyle rownych 255: " + counter255);
         int sum = mask.rows() * mask.cols();
         System.out.println("Suma pikseli: " + sum);
+        //Zapis do pliku obrazków w celu widoku efektów
         Highgui.imwrite("result.jpg", result);
         Highgui.imwrite("mask.jpg", mask);
+
+    }
+
+    /**
+     * Cuts and saves all possible rectangles into .jpg files.
+     *
+     * @param rects List with rectangles.
+     */
+    public void cutAndSavePossiblePlate(List<RotatedRect> rects) {
+        int rectCount = 0;
+        for (RotatedRect rect : rects) {
+            rectCount++;
+            double r = (double) rect.size.width / (double) rect.size.height;
+            double angle = rect.angle;
+            if (r < 1) {
+                angle = 90 + angle;
+            }
+            Mat rotmat = Imgproc.getRotationMatrix2D(rect.center, angle, 1);
+
+            Mat img_rotated = new Mat();
+            Imgproc.warpAffine(photoOriginal, img_rotated, rotmat, photoOriginal.size(), Imgproc.INTER_CUBIC);
+
+            Size rect_size = rect.size;
+            if (r < 1) {
+                double temp;
+                temp = rect_size.width;
+                rect_size.width = rect_size.height;
+                rect_size.height = temp;
+            }
+            Mat img_crop = new Mat();
+            //Wycinanka prostokąta.
+            Imgproc.getRectSubPix(img_rotated, rect_size, rect.center, img_crop);
+            Highgui.imwrite("cropped_images\\cropped" + rectCount + ".jpg", img_crop);
+        }
     }
 
     /**
