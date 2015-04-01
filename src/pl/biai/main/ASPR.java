@@ -20,6 +20,7 @@ public class ASPR {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        //kutasiorki <3
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         
         Gui gui = new Gui();
