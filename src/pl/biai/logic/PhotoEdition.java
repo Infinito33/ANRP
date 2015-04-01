@@ -22,7 +22,7 @@ import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 /**
- * PENIS PENIS
+ * KUTASIOREK
  * @author Fufer
  * @version 1.0
  */
