@@ -26,6 +26,7 @@ import org.opencv.imgproc.Imgproc;
  * @version 1.0
  */
 public class PhotoEdition {
+//testing pull up
 
     /**
      * Photo with plates loaded by file chooser.
