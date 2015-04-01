@@ -1,6 +1,5 @@
 package pl.biai.main;
 
-import com.atul.JavaOpenCV.Imshow;
 import java.util.ArrayList;
 import java.util.List;
 import org.opencv.core.*;
@@ -12,7 +11,7 @@ import pl.biai.gui.Gui;
 
 /**
  * Automatic System of Plate Recognition
- *
+ * jazda jazda
  * @author Fufer
  */
 public class ASPR {
@@ -88,7 +87,6 @@ public class ASPR {
             }
         }*/
 
-        Imshow imshow = new Imshow("Title");
         //imshow.showImage(thresholdPhoto);
     }
 
