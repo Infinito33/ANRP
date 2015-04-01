@@ -7,9 +7,6 @@ import java.io.File;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.highgui.Highgui;
 import pl.biai.logic.PhotoEdition;
 
 /**
@@ -23,12 +20,13 @@ public class Gui extends javax.swing.JFrame {
      * Logic class of photo edition algorithms.
      */
     private PhotoEdition pe;
-    
+
     /**
-     * Image converted from Mat object for displaying on the screen.
+     * Image converted from Mat object for displaying on the screen. Check
+     * overrided method repaint() of guiPhotoPanel.
      */
     private BufferedImage buffImage = null;
-    
+
     /**
      * Creates new form WindowFrame
      */
@@ -183,39 +181,59 @@ public class Gui extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void guiFirstMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_guiFirstMenuItem1ActionPerformed
+        //Sciezka domyslna ustawiona bo mi sie ciagle ladowac obrazku 
+        //nie chcialo, poniższy kod otwiera file selectora i wybierasz zdjęcie
         /*
-        guiPhotoChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        guiPhotoChooser.showOpenDialog(null);
-        guiPhotoChooser.setVisible(true);
-        File selectedFile = guiPhotoChooser.getSelectedFile();
+         guiPhotoChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+         guiPhotoChooser.showOpenDialog(null);
+         guiPhotoChooser.setVisible(true);
+         File selectedFile = guiPhotoChooser.getSelectedFile();
         
-        PhotoEdition.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
-        */
-        String path = "C:\\Users\\tomol_000\\Desktop\\test1.jpg";
+         PhotoEdition.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
+         */
+
+        //String path = "C:\\Users\\tomol_000\\Desktop\\test1.jpg";
+        String path = "C:\\Users\\tomol_000\\Desktop\\ANRP BIAI Project\\ANRP\\src\\resources\\test3.jpg";
         PhotoEdition.setFilePath(path);
+
         pe.loadPhotoToMat();
         pe.updatePhoto(false);
 
-        //Graphics graphics = buffImage.getGraphics();
-        
-        
-        //guiPhotoPanel.paintComponents(graphics);
+        //Maluje fotke w ramce, sprawdz metodę repaint dla guiPhotoPanel.
         repaint();
-        //System.out.println(selectedFile.getAbsolutePath());
     }//GEN-LAST:event_guiFirstMenuItem1ActionPerformed
 
+    /**
+     * Action when you click first button. Makes photo clean (without noises),
+     * gray scale and apply sobel filter. Then it updates photo and repaint it
+     * on guiPhotoPanel.
+     *
+     * @param evt
+     */
     private void greyAndNoiseRemoveButonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_greyAndNoiseRemoveButonActionPerformed
         pe.makeCleanAndSobel();
         pe.updatePhoto(false);
         guiPhotoPanel.repaint();
     }//GEN-LAST:event_greyAndNoiseRemoveButonActionPerformed
 
+    /**
+     * Action when you click second button. Makes thresholding and morphology of
+     * photo.
+     *
+     * @param evt
+     */
     private void threshAndMorphButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_threshAndMorphButtonActionPerformed
         pe.makeThresholdAndMorphology();
         pe.updatePhoto(false);
         guiPhotoPanel.repaint();
     }//GEN-LAST:event_threshAndMorphButtonActionPerformed
 
+    /**
+     * Action when you click third button. Detects possible rectangles where the
+     * plate can be.
+     *
+     * @param evt
+     */
     private void detectRectsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detectRectsButtonActionPerformed
         pe.findPossiblePlateRects();
         pe.updatePhoto(false);

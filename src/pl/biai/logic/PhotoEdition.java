@@ -22,7 +22,6 @@ import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 /**
- * KUTASIOREK
  * @author Fufer
  * @version 1.0
  */
@@ -47,7 +46,7 @@ public class PhotoEdition {
      * Copy of photo which will be edited.
      */
     private Mat photoEdited = null;
-    
+
     public Mat mask = null;
 
     /**
@@ -64,7 +63,6 @@ public class PhotoEdition {
      * edited photo.
      */
     public void updatePhoto(boolean originalPhoto) {
-        //Mat image_tmp = Highgui.imread(filePath);
         MatOfByte matOfByte = new MatOfByte();
 
         if (originalPhoto) {
@@ -89,7 +87,6 @@ public class PhotoEdition {
      * Loads photo into Mat object based on local path.
      */
     public void loadPhotoToMat() {
-        Mat photo = new Mat();
         photoOriginal = Highgui.imread(filePath);
         photoEdited = Highgui.imread(filePath);
     }
@@ -105,8 +102,8 @@ public class PhotoEdition {
     }
 
     /**
-     * Makes threshold and morphology in order to specify regions which in the
-     * plate can be.
+     * Step 2 Makes threshold and morphology in order to specify regions which
+     * in the plate can be.
      */
     public void makeThresholdAndMorphology() {
         Imgproc.threshold(photoEdited, photoEdited, 0, 255, Imgproc.THRESH_OTSU + Imgproc.THRESH_BINARY);
@@ -135,20 +132,23 @@ public class PhotoEdition {
                 rects.add(rr);
             }
         }
-        
+        //W tym momencie w liście "rects" mamy możliwe prostokąty, jeden z nich to tablica.
+        //Dalej jest część z flood fillem ktorej nie ogarniam i jak na moje oko to zle narazie dziala.
+        //Maska jest zapisywana do mask.jpg jak cos, result z niebieskimi kreskami w result.jpg
+        //Możesz posprawdzać i pokombinować coś wedlug tej ksiazki.
+
         Mat result = new Mat();
         photoOriginal.copyTo(result);
-        Imgproc.drawContours(result, contoursList, -1, new Scalar(255,0,0), 1);
-        
+        Imgproc.drawContours(result, contoursList, -1, new Scalar(255, 0, 0), 1);
+
         for (RotatedRect rect : rects) {
-            Core.circle(result, rect.center, 3, new Scalar(0,255,0), -1);
+            Core.circle(result, rect.center, 3, new Scalar(0, 255, 0), -1);
             //Core.circle(photoEdited, rect.center, 30, new Scalar(255,255,0), 50);
             //Specify minimum size between width and height
             double minSize = (rect.size.width < rect.size.height) ? rect.size.width : rect.size.height;
             minSize = minSize - minSize * 0.5;
 
             mask = new Mat(photoOriginal.rows() + 2, photoOriginal.cols() + 2, CvType.CV_8UC1);
-            //mask.create(photoEdited.rows() + 2, photoEdited.cols(), CvType.CV_8UC1);
             mask.setTo(Scalar.all(0));
             int loDiff = 30;
             int upDiff = 30;
@@ -156,25 +156,25 @@ public class PhotoEdition {
             int newMaskVal = 255;
             int numSeeds = 10;
             Rect ccomp = new Rect();
-            
+
             int flags = connectivity + (newMaskVal << 8) + Imgproc.FLOODFILL_FIXED_RANGE + Imgproc.FLOODFILL_MASK_ONLY;
-            
+
             Random rand = new Random();
-            double range_d = minSize - (minSize/2);
+            double range_d = minSize - (minSize / 2);
             int range = (int) range_d;
-            
+
             for (int i = 0; i < numSeeds; i++) {
                 Point seed = new Point();
                 seed.x = rect.center.x + rand.nextInt(range);
                 seed.y = rect.center.y + rand.nextInt(range);
-                Core.circle(result, seed, 1, new Scalar(0,255,255), -1);
+                Core.circle(result, seed, 1, new Scalar(0, 255, 255), -1);
                 //Core.circle(photoEdited, seed, 30, new Scalar(255,255,0), 50);
-                int area = Imgproc.floodFill(photoOriginal, mask, seed, new Scalar(255,0,0), ccomp, new Scalar(loDiff, loDiff, loDiff), new Scalar(upDiff, upDiff, upDiff), flags);
+                int area = Imgproc.floodFill(photoOriginal, mask, seed, new Scalar(255, 0, 0), ccomp, new Scalar(loDiff, loDiff, loDiff), new Scalar(upDiff, upDiff, upDiff), flags);
                 System.out.print(area + " ");
             }
             System.out.println();
         }
-        
+
         List<Point> pointsOfInterest = new ArrayList<>();
         MatOfPoint2f mop2f = new MatOfPoint2f();
         int counter255 = 0;
@@ -183,26 +183,23 @@ public class PhotoEdition {
                 double[] pixel = new double[3];
                 //mask.get(i, j, pixel);
                 pixel = mask.get(i, j);
-                
-                if(pixel[0] == 255.0) {
-                    Point test = new Point(i,j);
+
+                if (pixel[0] == 255.0) {
+                    Point test = new Point(i, j);
                     pointsOfInterest.add(test);
                     //MatOfPoint mop = new MatOfPoint(test);
                     //MatOfPoint2f mop2f = new MatOfPoint2f(mop.toArray());
-                    
+
                     //pointsOfInterest.add(mop2f);
-                    
                     counter255++;
                 }
-                
+
                 //System.out.println("");
-                
-                
             }
         }
         mop2f.fromList(pointsOfInterest);
-                RotatedRect minRect = Imgproc.minAreaRect(mop2f);
-                
+        RotatedRect minRect = Imgproc.minAreaRect(mop2f);
+
         System.out.println("Wykryto tyle rownych 255: " + counter255);
         int sum = mask.rows() * mask.cols();
         System.out.println("Suma pikseli: " + sum);
@@ -214,8 +211,8 @@ public class PhotoEdition {
      * Verifies if rectangle has proper size, basing on polish plates and having
      * mistake error at 40%
      *
-     * @param candidate
-     * @return
+     * @param candidate Tested rectangle.
+     * @return True if sizes are ok, otherwise false.
      */
     public static boolean verifySizes(RotatedRect candidate) {
         double error = 0.4;
