@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import pl.biai.logic.PhotoEdition;
+import pl.biai.logic.PossiblePlateDetection;
 
 /**
  *
@@ -19,7 +19,7 @@ public class Gui extends javax.swing.JFrame {
     /**
      * Logic class of photo edition algorithms.
      */
-    private PhotoEdition pe;
+    private PossiblePlateDetection pe;
 
     /**
      * Image converted from Mat object for displaying on the screen. Check
@@ -32,7 +32,7 @@ public class Gui extends javax.swing.JFrame {
      */
     public Gui() {
         initComponents();
-        pe = new PhotoEdition();
+        pe = new PossiblePlateDetection();
     }
 
     /**
@@ -189,12 +189,12 @@ public class Gui extends javax.swing.JFrame {
          guiPhotoChooser.setVisible(true);
          File selectedFile = guiPhotoChooser.getSelectedFile();
         
-         PhotoEdition.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
+         PossiblePlateDetection.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
          */
 
-        //String path = "C:\\Users\\tomol_000\\Desktop\\test1.jpg";
-        String path = "C:\\Users\\tomol_000\\Desktop\\ANRP BIAI Project\\ANRP\\src\\resources\\test3.jpg";
-        PhotoEdition.setFilePath(path);
+        String path = "C:\\Users\\tomol_000\\Desktop\\test1.jpg";
+        //String path = "C:\\Users\\tomol_000\\Desktop\\ANRP BIAI Project\\ANRP\\src\\resources\\test3.jpg";
+        PossiblePlateDetection.setFilePath(path);
 
         pe.loadPhotoToMat();
         pe.updatePhoto(false);
