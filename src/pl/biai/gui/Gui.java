@@ -33,6 +33,22 @@ public class Gui extends javax.swing.JFrame {
     public Gui() {
         initComponents();
         pe = new PossiblePlateDetection();
+        //createCroppedTables();
+    }
+
+    /**
+     * Saves all detected rectangles into one folder.
+     */
+    public void createCroppedTables() {
+        for (int i = 1; i < 120; i++) {
+            String path = "C:\\Users\\tomol_000\\Desktop\\snapshots\\foto" + i + ".jpg";
+            PossiblePlateDetection.setFilePath(path);
+            pe.loadPhotoToMat();
+            pe.makeCleanAndSobel();
+            pe.makeThresholdAndMorphology();
+            pe.findPossiblePlateRects();
+            PossiblePlateDetection.testPlateCount++;
+        }
     }
 
     /**

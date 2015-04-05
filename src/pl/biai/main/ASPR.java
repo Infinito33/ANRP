@@ -21,7 +21,7 @@ public class ASPR {
         //Gui gui = new Gui();
         //gui.createGui();
         
-        SVMTrainCreator stc = new SVMTrainCreator(1, 0);
+        SVMTrainCreator stc = new SVMTrainCreator(101, 50);
         stc.prepareTrainingFile();
 
     }

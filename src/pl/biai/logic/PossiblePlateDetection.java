@@ -49,6 +49,8 @@ public class PossiblePlateDetection {
     private Mat photoEdited = null;
 
     public Mat mask = null;
+    
+    public static int testPlateCount = 1;
 
     /**
      * Constructor.
@@ -141,6 +143,9 @@ public class PossiblePlateDetection {
         //Dalej jest część z flood fillem ktorej nie ogarniam i jak na moje oko to zle narazie dziala.
         //Maska jest zapisywana do mask.jpg jak cos, result z niebieskimi kreskami w result.jpg
         //Możesz posprawdzać i pokombinować coś wedlug tej ksiazki.
+        
+        /*
+        
         Mat result = new Mat();
         photoOriginal.copyTo(result);
         Imgproc.drawContours(result, contoursList, -1, new Scalar(255, 0, 0), 1);
@@ -210,7 +215,8 @@ public class PossiblePlateDetection {
         //Zapis do pliku obrazków w celu widoku efektów
         Highgui.imwrite("result.jpg", result);
         Highgui.imwrite("mask.jpg", mask);
-
+        
+        */
     }
 
     /**
@@ -248,6 +254,7 @@ public class PossiblePlateDetection {
             Mat equalizedImage = equalizeCroppedRect(croppedImage);
 
             Highgui.imwrite("cropped_images\\cropped" + rectCount + ".jpg", equalizedImage);
+            //Highgui.imwrite("cropped_images\\cropped" + testPlateCount + rectCount + ".jpg", equalizedImage);
         }
     }
 
