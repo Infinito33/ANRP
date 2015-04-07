@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_core.FileNode;
+import org.bytedeco.javacpp.opencv_core.FileStorage;
+import org.bytedeco.javacpp.opencv_highgui;
+import org.bytedeco.javacpp.opencv_ml;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -18,15 +24,17 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.core.TermCriteria;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.ml.CvSVM;
+import org.opencv.ml.CvSVMParams;
 
 /**
  * @author Fufer
  * @version 1.0
  */
 public class PossiblePlateDetection {
-//testing pull up
 
     /**
      * Photo with plates loaded by file chooser.
@@ -49,7 +57,7 @@ public class PossiblePlateDetection {
     private Mat photoEdited = null;
 
     public Mat mask = null;
-    
+
     public static int testPlateCount = 1;
 
     /**
@@ -143,80 +151,79 @@ public class PossiblePlateDetection {
         //Dalej jest część z flood fillem ktorej nie ogarniam i jak na moje oko to zle narazie dziala.
         //Maska jest zapisywana do mask.jpg jak cos, result z niebieskimi kreskami w result.jpg
         //Możesz posprawdzać i pokombinować coś wedlug tej ksiazki.
-        
         /*
         
-        Mat result = new Mat();
-        photoOriginal.copyTo(result);
-        Imgproc.drawContours(result, contoursList, -1, new Scalar(255, 0, 0), 1);
+         Mat result = new Mat();
+         photoOriginal.copyTo(result);
+         Imgproc.drawContours(result, contoursList, -1, new Scalar(255, 0, 0), 1);
 
-        for (RotatedRect rect : rects) {
-            Core.circle(result, rect.center, 3, new Scalar(0, 255, 0), -1);
-            //Core.circle(photoEdited, rect.center, 30, new Scalar(255,255,0), 50);
-            //Specify minimum size between width and height
-            double minSize = (rect.size.width < rect.size.height) ? rect.size.width : rect.size.height;
-            minSize = minSize - minSize * 0.5;
+         for (RotatedRect rect : rects) {
+         Core.circle(result, rect.center, 3, new Scalar(0, 255, 0), -1);
+         //Core.circle(photoEdited, rect.center, 30, new Scalar(255,255,0), 50);
+         //Specify minimum size between width and height
+         double minSize = (rect.size.width < rect.size.height) ? rect.size.width : rect.size.height;
+         minSize = minSize - minSize * 0.5;
 
-            mask = new Mat(photoOriginal.rows() + 2, photoOriginal.cols() + 2, CvType.CV_8UC1);
-            mask.setTo(Scalar.all(0));
-            int loDiff = 30;
-            int upDiff = 30;
-            int connectivity = 4;
-            int newMaskVal = 255;
-            int numSeeds = 10;
-            Rect ccomp = new Rect();
+         mask = new Mat(photoOriginal.rows() + 2, photoOriginal.cols() + 2, CvType.CV_8UC1);
+         mask.setTo(Scalar.all(0));
+         int loDiff = 30;
+         int upDiff = 30;
+         int connectivity = 4;
+         int newMaskVal = 255;
+         int numSeeds = 10;
+         Rect ccomp = new Rect();
 
-            int flags = connectivity + (newMaskVal << 8) + Imgproc.FLOODFILL_FIXED_RANGE + Imgproc.FLOODFILL_MASK_ONLY;
+         int flags = connectivity + (newMaskVal << 8) + Imgproc.FLOODFILL_FIXED_RANGE + Imgproc.FLOODFILL_MASK_ONLY;
 
-            Random rand = new Random();
-            double range_d = minSize - (minSize / 2);
-            int range = (int) range_d;
+         Random rand = new Random();
+         double range_d = minSize - (minSize / 2);
+         int range = (int) range_d;
 
-            for (int i = 0; i < numSeeds; i++) {
-                Point seed = new Point();
-                seed.x = rect.center.x + rand.nextInt(range);
-                seed.y = rect.center.y + rand.nextInt(range);
-                Core.circle(result, seed, 1, new Scalar(0, 255, 255), -1);
-                //Core.circle(photoEdited, seed, 30, new Scalar(255,255,0), 50);
-                int area = Imgproc.floodFill(photoOriginal, mask, seed, new Scalar(255, 0, 0), ccomp, new Scalar(loDiff, loDiff, loDiff), new Scalar(upDiff, upDiff, upDiff), flags);
-                System.out.print(area + " ");
-            }
-            System.out.println();
-        }
+         for (int i = 0; i < numSeeds; i++) {
+         Point seed = new Point();
+         seed.x = rect.center.x + rand.nextInt(range);
+         seed.y = rect.center.y + rand.nextInt(range);
+         Core.circle(result, seed, 1, new Scalar(0, 255, 255), -1);
+         //Core.circle(photoEdited, seed, 30, new Scalar(255,255,0), 50);
+         int area = Imgproc.floodFill(photoOriginal, mask, seed, new Scalar(255, 0, 0), ccomp, new Scalar(loDiff, loDiff, loDiff), new Scalar(upDiff, upDiff, upDiff), flags);
+         System.out.print(area + " ");
+         }
+         System.out.println();
+         }
 
-        List<Point> pointsOfInterest = new ArrayList<>();
-        MatOfPoint2f mop2f = new MatOfPoint2f();
-        int counter255 = 0;
-        for (int i = 0; i < mask.rows(); i++) {
-            for (int j = 0; j < mask.cols(); j++) {
-                double[] pixel = new double[3];
-                //mask.get(i, j, pixel);
-                pixel = mask.get(i, j);
+         List<Point> pointsOfInterest = new ArrayList<>();
+         MatOfPoint2f mop2f = new MatOfPoint2f();
+         int counter255 = 0;
+         for (int i = 0; i < mask.rows(); i++) {
+         for (int j = 0; j < mask.cols(); j++) {
+         double[] pixel = new double[3];
+         //mask.get(i, j, pixel);
+         pixel = mask.get(i, j);
 
-                if (pixel[0] == 255.0) {
-                    Point test = new Point(i, j);
-                    pointsOfInterest.add(test);
-                    //MatOfPoint mop = new MatOfPoint(test);
-                    //MatOfPoint2f mop2f = new MatOfPoint2f(mop.toArray());
+         if (pixel[0] == 255.0) {
+         Point test = new Point(i, j);
+         pointsOfInterest.add(test);
+         //MatOfPoint mop = new MatOfPoint(test);
+         //MatOfPoint2f mop2f = new MatOfPoint2f(mop.toArray());
 
-                    //pointsOfInterest.add(mop2f);
-                    counter255++;
-                }
+         //pointsOfInterest.add(mop2f);
+         counter255++;
+         }
 
-                //System.out.println("");
-            }
-        }
-        mop2f.fromList(pointsOfInterest);
-        RotatedRect minRect = Imgproc.minAreaRect(mop2f);
+         //System.out.println("");
+         }
+         }
+         mop2f.fromList(pointsOfInterest);
+         RotatedRect minRect = Imgproc.minAreaRect(mop2f);
 
-        System.out.println("Wykryto tyle rownych 255: " + counter255);
-        int sum = mask.rows() * mask.cols();
-        System.out.println("Suma pikseli: " + sum);
-        //Zapis do pliku obrazków w celu widoku efektów
-        Highgui.imwrite("result.jpg", result);
-        Highgui.imwrite("mask.jpg", mask);
+         System.out.println("Wykryto tyle rownych 255: " + counter255);
+         int sum = mask.rows() * mask.cols();
+         System.out.println("Suma pikseli: " + sum);
+         //Zapis do pliku obrazków w celu widoku efektów
+         Highgui.imwrite("result.jpg", result);
+         Highgui.imwrite("mask.jpg", mask);
         
-        */
+         */
     }
 
     /**
@@ -269,7 +276,7 @@ public class PossiblePlateDetection {
         Mat resultResized = new Mat();
         resultResized.create(33, 144, CvType.CV_8UC3);
         Imgproc.resize(cropped, resultResized, resultResized.size(), 0, 0, Imgproc.INTER_CUBIC);
-        
+
         //Equalize cropped image with light histogram
         Mat grayResult = new Mat();
         Imgproc.cvtColor(resultResized, grayResult, Imgproc.COLOR_BGR2GRAY);
@@ -307,6 +314,103 @@ public class PossiblePlateDetection {
         } else {
             return true;
         }
+    }
+
+    /**
+     * Filters all rectangles which might be plates.
+     */
+    public void filterPossiblePlates() {
+        //SVM for each plate region to get valid car plates
+        //Read file storage.
+        //OTWIERA PLIK SVM.xml Z DANYMI OBRAZÓW
+        opencv_core.FileStorage fs = new opencv_core.FileStorage("SVM.xml", opencv_core.FileStorage.READ);
+        //Mat SVM_TrainingData = new Mat();
+        //Mat SVM_Classes = new Mat();
+        /*
+        //opencv_core.CvFileStorage cfs = new opencv_core.CvFileStorage();
+        //opencv_core.CvMemStorage storage = opencv_core.cvCreateMemStorage(0);
+        //cfs = opencv_core.cvOpenFileStorage("SVM.xml", storage, opencv_core.CV_STORAGE_READ, null);
+        //String ref_image = opencv_core.cvReadStringByName(cfs, null, "TrainingData", "");
+
+        opencv_core.Mat SVM_TrainingData = new opencv_core.Mat();
+        opencv_core.Mat SVM_Classes = new opencv_core.Mat();
+
+        opencv_core.FileNode dataNode = new FileNode();
+        opencv_core.FileNode labelsNode = new FileNode();
+
+        //BytePointer test = new BytePointer("TrainingData");
+        dataNode = fs.getFirstTopLevelNode();
+
+        labelsNode = fs.get("TrainingLabels");
+
+        opencv_core.read(dataNode, SVM_TrainingData);
+        opencv_core.read(labelsNode, SVM_Classes);
+    //boolean testing = SVM_TrainingData.isNull();
+
+        //fs["TrainingData"] >> SVM_TrainingData;
+        //fs["classes"] >> SVM_Classes;
+        //Set SVM params
+        opencv_core.CvTermCriteria criteria = opencv_core.cvTermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
+        opencv_ml.CvSVMParams SVM_params = new opencv_ml.CvSVMParams(opencv_ml.CvSVM.C_SVC, opencv_ml.CvSVM.LINEAR, 0, 1, 0, 1, 0, 0, null, criteria);
+
+        //SVM_params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 1000, 0.01);
+        //Train SVM
+        opencv_ml.CvSVM svmClassifier = new opencv_ml.CvSVM(SVM_TrainingData, SVM_Classes, new opencv_core.Mat(), new opencv_core.Mat(), SVM_params);
+
+        for (int i = 1; i < 6; i++) {
+            opencv_core.Mat cropImg = opencv_highgui.imread("cropped_images\\cropped" + i + ".jpg");
+            cropImg = cropImg.reshape(1, 1);
+            cropImg.convertTo(cropImg, opencv_core.CV_32FC1);
+
+            int response = (int) svmClassifier.predict(cropImg);
+            if (response == 1) {
+                System.out.println("Znaleziono blachę! Numer: " + i);
+            }
+
+        }
+        */
+        
+        TaFileStorage tfs = new TaFileStorage();
+        tfs.open("SVM.xml", TaFileStorage.READ);
+        
+        Mat SvmData = tfs.readMat("TrainingData");
+        Mat SvmLabels = tfs.readMat("TrainingLabels");
+        
+        SvmData.convertTo(SvmData, CvType.CV_32FC1);
+        SvmLabels.convertTo(SvmLabels, CvType.CV_32FC1);
+        
+        Size testa = SvmData.size();
+        Size test = SvmLabels.size();
+        
+        CvSVMParams params = new CvSVMParams();
+        params.set_svm_type(CvSVM.C_SVC);
+        params.set_kernel_type(CvSVM.LINEAR);
+        params.set_degree(0);
+        params.set_gamma(1);
+        params.set_coef0(0);
+        params.set_C(1);
+        params.set_nu(0);
+        params.set_p(0);
+        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
+        params.set_term_crit(tc);
+                
+        CvSVM svmClassifier = new CvSVM(SvmData, SvmLabels, new Mat(), new Mat(), params);
+        
+        
+        for (int i = 1; i < 6; i++) {
+            Mat cropImg = Highgui.imread("cropped_images\\cropped" + i + ".jpg");
+            Size testb = cropImg.size();
+            cropImg = cropImg.reshape(1,1);
+            
+            cropImg.convertTo(cropImg, CvType.CV_32FC1);
+
+            int response = (int) svmClassifier.predict(cropImg);
+            if (response == 1) {
+                System.out.println("Znaleziono blachę! Numer: " + i);
+            }
+
+        }
+        
     }
 
     /**

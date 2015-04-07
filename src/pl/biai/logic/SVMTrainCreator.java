@@ -1,5 +1,6 @@
 package pl.biai.logic;
 
+import com.atul.JavaOpenCV.Imshow;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -10,7 +11,12 @@ import org.bytedeco.javacpp.opencv_core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.core.TermCriteria;
 import org.opencv.highgui.Highgui;
+import org.opencv.ml.CvSVM;
+import org.opencv.ml.CvSVMParams;
 import org.opencv.utils.Converters;
 
 /**
@@ -25,6 +31,8 @@ public class SVMTrainCreator {
     private final String pathNoPlates;
     private final int amountOfPlates;
     private final int amountOfNoPlates;
+    private final int imageWidth = 144;
+    private final int imageHeight = 33;
 
     /**
      * Initializes default amounts
@@ -46,15 +54,18 @@ public class SVMTrainCreator {
 
         Mat classes = new Mat();
         Mat trainingData = new Mat();
-        Mat trainingImages = new Mat();
-        List<Integer> trainingLabels = new ArrayList<>();
 
+        Mat trainingImages = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
+        Mat labels = new Mat(amountOfPlates + amountOfNoPlates, 1, CvType.CV_32FC1);
+        List<Integer> trainingLabels = new ArrayList<>();
+        
         //Dodaje prawidłowe fotki tablicy do Mat
         for (int i = 0; i < amountOfPlates; i++) {
             int index = i + 1;
             String file = pathPlates + index + ".jpg";
-
+            
             Mat img = Highgui.imread(file, 0);
+            img.convertTo(img, CvType.CV_32FC1);
             //Zmniejszenie kanałów do 1 oraz rzędów do 1
             img = img.reshape(1, 1);
             trainingImages.push_back(img);
@@ -66,12 +77,60 @@ public class SVMTrainCreator {
             int index = i + 1;
             String file = pathNoPlates + index + ".jpg";
             Mat img = Highgui.imread(file, 0);
+            img.convertTo(img, CvType.CV_32FC1);
             //Zmniejszenie kanałów do 1 oraz rzędów do 1
             img = img.reshape(1, 1);
             trainingImages.push_back(img);
             trainingLabels.add(0);
         }
+        //////////////////////////////////////////////////
+        //Testowanie nowego ustawienia ///////////////////
 
+        //Konwersja Listy do tablicy Integer       
+        Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
+
+        //Konwersja tablicy Integer do tablicy int...
+        int[] trainLabels = new int[array.length];
+        for (int i = 0; i < array.length; i++) {
+            trainLabels[i] = array[i];
+        }
+
+        //Załadowanie oznakowań do Mata
+        for (int i = 0; i < trainingLabels.size(); i++) {
+            labels.put(i, 1, trainLabels[i]);
+        }
+
+        CvSVMParams params = new CvSVMParams();
+        params.set_svm_type(CvSVM.C_SVC);
+        params.set_kernel_type(CvSVM.LINEAR);
+        params.set_degree(0);
+        params.set_gamma(1);
+        params.set_coef0(0);
+        params.set_C(1);
+        params.set_nu(0);
+        params.set_p(0);
+        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
+        params.set_term_crit(tc);
+
+        Size data = trainingImages.size();
+        Size label = labels.size();
+        
+
+        //CvSVM svmClassifier = new CvSVM(trainingImages, labels, new Mat(), new Mat(), params);
+        CvSVM svmClassifier = new CvSVM();
+        svmClassifier.train(trainingImages, labels, new Mat(), new Mat(), params);
+        svmClassifier.save("test.xml");
+
+        Mat cropImg = Highgui.imread("cropped_images\\cropped2.jpg");
+        Size testb = cropImg.size();
+        cropImg = cropImg.reshape(1, 1);
+
+        cropImg.convertTo(cropImg, CvType.CV_32FC1);
+
+        int response = (int) svmClassifier.predict(cropImg);
+
+        /*
+        ////////////////////////////////////////////////
         //Kopia wszystkich fotek i konwersja
         trainingImages.copyTo(trainingData);
         trainingData.convertTo(trainingData, CvType.CV_32FC1);
@@ -106,20 +165,21 @@ public class SVMTrainCreator {
         //Zapis danych MAT do SVM.xml
         opencv_core.write(fs, "TrainingData", finalMat);
 
-        //Konwersja Listy do tablicy Integer       
-        Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
+        /*
+         //Konwersja Listy do tablicy Integer       
+         Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
 
-        //Konwersja tablicy Integer do tablicy int...
-        int[] trainLabels = new int[array.length];
-        for (int i = 0; i < array.length; i++) {
-            trainLabels[i] = array[i];
-        }
-
+         //Konwersja tablicy Integer do tablicy int...
+         int[] trainLabels = new int[array.length];
+         for (int i = 0; i < array.length; i++) {
+         trainLabels[i] = array[i];
+         }*/
         //Utworzenie Mat z oznaczeniami i zapis do SVM.xml
-        opencv_core.Mat trainLabelsMat = new opencv_core.Mat(trainLabels);
-        opencv_core.write(fs, "TrainingLabels", trainLabelsMat);
+        //opencv_core.Mat trainLabelsMat = new opencv_core.Mat(trainLabels);
+       // opencv_core.write(fs, "TrainingLabels", trainLabelsMat);
 
         //Zamknięcie SVM.xml
-        fs.release();
+        //fs.release();
+        
     }
 }

@@ -78,6 +78,7 @@ public class Gui extends javax.swing.JFrame {
         greyAndNoiseRemoveButon = new javax.swing.JButton();
         threshAndMorphButton = new javax.swing.JButton();
         detectRectsButton = new javax.swing.JButton();
+        xmlTestButton = new javax.swing.JButton();
         guiMenuBar = new javax.swing.JMenuBar();
         guiFirstMenu = new javax.swing.JMenu();
         guiFirstMenuItem1 = new javax.swing.JMenuItem();
@@ -139,6 +140,13 @@ public class Gui extends javax.swing.JFrame {
             }
         });
 
+        xmlTestButton.setText("XML test");
+        xmlTestButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                xmlTestButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout guiOptionsPanelLayout = new javax.swing.GroupLayout(guiOptionsPanel);
         guiOptionsPanel.setLayout(guiOptionsPanelLayout);
         guiOptionsPanelLayout.setHorizontalGroup(
@@ -150,7 +158,9 @@ public class Gui extends javax.swing.JFrame {
                 .addComponent(threshAndMorphButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(detectRectsButton)
-                .addContainerGap(356, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 269, Short.MAX_VALUE)
+                .addComponent(xmlTestButton)
+                .addContainerGap())
         );
         guiOptionsPanelLayout.setVerticalGroup(
             guiOptionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -159,7 +169,8 @@ public class Gui extends javax.swing.JFrame {
                 .addGroup(guiOptionsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(greyAndNoiseRemoveButon)
                     .addComponent(threshAndMorphButton)
-                    .addComponent(detectRectsButton))
+                    .addComponent(detectRectsButton)
+                    .addComponent(xmlTestButton))
                 .addGap(36, 36, 36))
         );
 
@@ -208,7 +219,7 @@ public class Gui extends javax.swing.JFrame {
          PossiblePlateDetection.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
          */
 
-        String path = "C:\\Users\\tomol_000\\Desktop\\test1.jpg";
+        String path = "C:\\Users\\tomol_000\\Desktop\\ANRP\\src\\resources\\test3.jpg";
         //String path = "C:\\Users\\tomol_000\\Desktop\\ANRP BIAI Project\\ANRP\\src\\resources\\test3.jpg";
         PossiblePlateDetection.setFilePath(path);
 
@@ -255,6 +266,10 @@ public class Gui extends javax.swing.JFrame {
         pe.updatePhoto(false);
         guiPhotoPanel.repaint();
     }//GEN-LAST:event_detectRectsButtonActionPerformed
+
+    private void xmlTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_xmlTestButtonActionPerformed
+        pe.filterPossiblePlates();
+    }//GEN-LAST:event_xmlTestButtonActionPerformed
 
     /**
      * Creates GUI of application.
@@ -304,5 +319,6 @@ public class Gui extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JButton threshAndMorphButton;
+    private javax.swing.JButton xmlTestButton;
     // End of variables declaration//GEN-END:variables
 }
