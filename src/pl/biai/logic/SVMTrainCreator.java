@@ -17,6 +17,7 @@ import org.opencv.core.TermCriteria;
 import org.opencv.highgui.Highgui;
 import org.opencv.ml.CvSVM;
 import org.opencv.ml.CvSVMParams;
+import org.opencv.ml.CvStatModel;
 import org.opencv.utils.Converters;
 
 /**
@@ -56,14 +57,14 @@ public class SVMTrainCreator {
         Mat trainingData = new Mat();
 
         Mat trainingImages = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
-        Mat labels = new Mat(amountOfPlates + amountOfNoPlates, 1, CvType.CV_32FC1);
+        Mat labels = new Mat(amountOfPlates + amountOfNoPlates, 1, CvType.CV_32SC1);
         List<Integer> trainingLabels = new ArrayList<>();
-        
+
         //Dodaje prawidłowe fotki tablicy do Mat
         for (int i = 0; i < amountOfPlates; i++) {
             int index = i + 1;
             String file = pathPlates + index + ".jpg";
-            
+
             Mat img = Highgui.imread(file, 0);
             img.convertTo(img, CvType.CV_32FC1);
             //Zmniejszenie kanałów do 1 oraz rzędów do 1
@@ -109,63 +110,79 @@ public class SVMTrainCreator {
         params.set_C(1);
         params.set_nu(0);
         params.set_p(0);
-        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
+        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 200, 0.01);
         params.set_term_crit(tc);
 
         Size data = trainingImages.size();
         Size label = labels.size();
-        
 
         //CvSVM svmClassifier = new CvSVM(trainingImages, labels, new Mat(), new Mat(), params);
         CvSVM svmClassifier = new CvSVM();
-        svmClassifier.train(trainingImages, labels, new Mat(), new Mat(), params);
-        svmClassifier.save("test.xml");
 
-        Mat cropImg = Highgui.imread("cropped_images\\cropped2.jpg");
-        Size testb = cropImg.size();
-        cropImg = cropImg.reshape(1, 1);
+        Mat temp1 = new Mat();
+        Mat temp2 = new Mat();
+        //temp1.convertTo(temp1, CvType.CV_32SC1);
+        //temp2.convertTo(temp2, CvType.CV_32SC1);
 
-        cropImg.convertTo(cropImg, CvType.CV_32FC1);
+        svmClassifier.train(trainingImages, labels, temp1, temp2, params);
+        //svmClassifier.save("test.xml");
 
-        int response = (int) svmClassifier.predict(cropImg);
+        //DZIAŁĄ KURWA DZIAŁA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        for (int i = 1; i < 11; i++) {
 
-        /*
-        ////////////////////////////////////////////////
-        //Kopia wszystkich fotek i konwersja
-        trainingImages.copyTo(trainingData);
-        trainingData.convertTo(trainingData, CvType.CV_32FC1);
+            //Mat cropImg = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
+            Mat temp = Highgui.imread("cropped_images\\cropped" + i + ".jpg", 0);
+            temp.convertTo(temp, CvType.CV_32FC1);
+            temp = temp.reshape(1, 1);
 
-        //Konwersja listy oznaczeń "1" i "0" do postaci Mat
-        classes = Converters.vector_int_to_Mat(trainingLabels);
+            Size afterchanges = temp.size();
 
-        //Otwarcie pliku SVM.xml do zapisu poprzez inny rodzaj OpenCV - tu javacpp.
-        //W naszym OpenCV nie było wrappera do FileStorage niestety.
-        opencv_core.FileStorage fs = new opencv_core.FileStorage("SVM.xml", opencv_core.FileStorage.WRITE);
+            //cropImg.push_back(temp);
 
-        //Tu będzie zbiór wszystkich fotek w postaci Mat
-        opencv_core.Mat finalMat = null;
+            //Size testcrop = cropImg.size();
+            Size testtemp = temp.size();
+            float response = svmClassifier.predict(temp);
 
-        //KONWERSJA na opencv_core.Mat bo inaczej nie użyjemy fs.write
-        MatOfByte matOfByte = new MatOfByte();
-
-        Highgui.imencode(".jpg", trainingData, matOfByte);
-        byte[] byteArray = matOfByte.toArray();
-        BufferedImage buffImage = null;
-
-        try {
-
-            InputStream in = new ByteArrayInputStream(byteArray);
-            buffImage = ImageIO.read(in);
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Response is equal: " + response);
         }
-        finalMat = opencv_core.Mat.createFrom(buffImage);
-        //Koniec konwersji /////////////////////////////////////////////
-
-        //Zapis danych MAT do SVM.xml
-        opencv_core.write(fs, "TrainingData", finalMat);
 
         /*
+         ////////////////////////////////////////////////
+         //Kopia wszystkich fotek i konwersja
+         trainingImages.copyTo(trainingData);
+         trainingData.convertTo(trainingData, CvType.CV_32FC1);
+
+         //Konwersja listy oznaczeń "1" i "0" do postaci Mat
+         classes = Converters.vector_int_to_Mat(trainingLabels);
+
+         //Otwarcie pliku SVM.xml do zapisu poprzez inny rodzaj OpenCV - tu javacpp.
+         //W naszym OpenCV nie było wrappera do FileStorage niestety.
+         opencv_core.FileStorage fs = new opencv_core.FileStorage("SVM.xml", opencv_core.FileStorage.WRITE);
+
+         //Tu będzie zbiór wszystkich fotek w postaci Mat
+         opencv_core.Mat finalMat = null;
+
+         //KONWERSJA na opencv_core.Mat bo inaczej nie użyjemy fs.write
+         MatOfByte matOfByte = new MatOfByte();
+
+         Highgui.imencode(".jpg", trainingData, matOfByte);
+         byte[] byteArray = matOfByte.toArray();
+         BufferedImage buffImage = null;
+
+         try {
+
+         InputStream in = new ByteArrayInputStream(byteArray);
+         buffImage = ImageIO.read(in);
+         } catch (Exception e) {
+         e.printStackTrace();
+         }
+         finalMat = opencv_core.Mat.createFrom(buffImage);
+         //Koniec konwersji /////////////////////////////////////////////
+
+         //Zapis danych MAT do SVM.xml
+         opencv_core.write(fs, "TrainingData", finalMat);
+
+         /*
          //Konwersja Listy do tablicy Integer       
          Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
 
@@ -176,10 +193,8 @@ public class SVMTrainCreator {
          }*/
         //Utworzenie Mat z oznaczeniami i zapis do SVM.xml
         //opencv_core.Mat trainLabelsMat = new opencv_core.Mat(trainLabels);
-       // opencv_core.write(fs, "TrainingLabels", trainLabelsMat);
-
+        // opencv_core.write(fs, "TrainingLabels", trainLabelsMat);
         //Zamknięcie SVM.xml
         //fs.release();
-        
     }
 }
