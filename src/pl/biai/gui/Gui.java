@@ -40,8 +40,8 @@ public class Gui extends javax.swing.JFrame {
      * Saves all detected rectangles into one folder.
      */
     public void createCroppedTables() {
-        for (int i = 1; i < 120; i++) {
-            String path = "C:\\Users\\tomol_000\\Desktop\\snapshots\\foto" + i + ".jpg";
+        for (int i = 1; i < 179; i++) {
+            String path = "C:\\Users\\tomol_000\\Desktop\\blachy\\" + i + ".jpg";
             PossiblePlateDetection.setFilePath(path);
             pe.loadPhotoToMat();
             pe.makeCleanAndSobel();
@@ -268,7 +268,7 @@ public class Gui extends javax.swing.JFrame {
     }//GEN-LAST:event_detectRectsButtonActionPerformed
 
     private void xmlTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_xmlTestButtonActionPerformed
-        pe.filterPossiblePlates();
+        pe.photoFilter();
     }//GEN-LAST:event_xmlTestButtonActionPerformed
 
     /**

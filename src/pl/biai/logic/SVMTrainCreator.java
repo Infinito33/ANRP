@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
-import org.bytedeco.javacpp.opencv_core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -21,86 +20,120 @@ import org.opencv.ml.CvStatModel;
 import org.opencv.utils.Converters;
 
 /**
- * Prepare training .xml file which contains converted MAT data.
+ * Creates SVM Classifier for predicting if image is a plate or not. Also can
+ * prepare .xml file with SVM data.
  *
  * @author Fufer
  * @version 1.0
  */
 public class SVMTrainCreator {
 
+    /**
+     * Path to photos with plates.
+     */
     private final String pathPlates;
+
+    /**
+     * Path to photos with no plates.
+     */
     private final String pathNoPlates;
-    private final int amountOfPlates;
-    private final int amountOfNoPlates;
+
+    /**
+     * Amount of plates photos passed in constructor.
+     */
+    private int amountOfPlates;
+
+    /**
+     * Amount of no-plates photos passed in constructor.
+     */
+    private int amountOfNoPlates;
+
+    /**
+     * Const image width for cropped images.
+     */
     private final int imageWidth = 144;
+
+    /**
+     * Const image height for cropped images.
+     */
     private final int imageHeight = 33;
 
     /**
-     * Initializes default amounts
-     *
-     * @param amountOfPlates Number of good plate's photos.
-     * @param amountOfNoPlates Number of wrong plate's photos.
+     * SVM object which will predict if a photo is plate or not. It will load
+     * .xml file with settings.
      */
-    public SVMTrainCreator(int amountOfPlates, int amountOfNoPlates) {
+    private CvSVM svmClassifier;
+
+    /**
+     * Initializes default amounts.
+     *
+     */
+    public SVMTrainCreator() {
         this.pathPlates = "plateTraining\\plate\\";
         this.pathNoPlates = "plateTraining\\Noplate\\";
-        this.amountOfPlates = amountOfPlates;
-        this.amountOfNoPlates = amountOfNoPlates;
+        this.amountOfPlates = 0;
+        this.amountOfNoPlates = 0;
+        this.svmClassifier = new CvSVM();
     }
 
     /**
-     * Prepares .xml file in main project folder.
+     * Prepares .xml file in main project folder for SVM training.
+     *
+     * @param amountOfPlates Amount of photos with plates.
+     * @param amountOfNoPlates Amount of photos with no plates.
      */
-    public void prepareTrainingFile() {
-
-        Mat classes = new Mat();
-        Mat trainingData = new Mat();
+    public void prepareTrainingFile(int amountOfPlates, int amountOfNoPlates) {
+        this.amountOfPlates = amountOfPlates;
+        this.amountOfNoPlates = amountOfNoPlates;
 
         Mat trainingImages = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
-        Mat labels = new Mat(amountOfPlates + amountOfNoPlates, 1, CvType.CV_32SC1);
-        List<Integer> trainingLabels = new ArrayList<>();
+        List<Double> trainingLabels = new ArrayList<>();
 
-        //Dodaje prawidłowe fotki tablicy do Mat
+        //Dodaje prawidłowe fotki
         for (int i = 0; i < amountOfPlates; i++) {
             int index = i + 1;
             String file = pathPlates + index + ".jpg";
 
             Mat img = Highgui.imread(file, 0);
-            img.convertTo(img, CvType.CV_32FC1);
+
             //Zmniejszenie kanałów do 1 oraz rzędów do 1
             img = img.reshape(1, 1);
+            img.convertTo(img, CvType.CV_32FC1);
             trainingImages.push_back(img);
-            trainingLabels.add(1);
+            trainingLabels.add(1.0);
         }
 
-        //Dodaje nieprawidłowe fotki do drugiego Mat
+        //Dodaje nieprawidłowe fotki
         for (int i = 0; i < amountOfNoPlates; i++) {
             int index = i + 1;
             String file = pathNoPlates + index + ".jpg";
             Mat img = Highgui.imread(file, 0);
-            img.convertTo(img, CvType.CV_32FC1);
+
             //Zmniejszenie kanałów do 1 oraz rzędów do 1
             img = img.reshape(1, 1);
+            img.convertTo(img, CvType.CV_32FC1);
             trainingImages.push_back(img);
-            trainingLabels.add(0);
+            trainingLabels.add(-1.0);
         }
-        //////////////////////////////////////////////////
-        //Testowanie nowego ustawienia ///////////////////
 
-        //Konwersja Listy do tablicy Integer       
-        Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
+        //Konwersja Listy do tablicy Double       
+        Double[] array = trainingLabels.toArray(new Double[trainingLabels.size()]);
 
-        //Konwersja tablicy Integer do tablicy int...
-        int[] trainLabels = new int[array.length];
+        //Konwersja tablicy Double do tablicy double...
+        double[] trainLabels = new double[array.length];
         for (int i = 0; i < array.length; i++) {
             trainLabels[i] = array[i];
         }
 
-        //Załadowanie oznakowań do Mata
-        for (int i = 0; i < trainingLabels.size(); i++) {
-            labels.put(i, 1, trainLabels[i]);
-        }
+        Mat positives = new Mat(amountOfPlates, 1, CvType.CV_32SC1, new Scalar(1.0));
+        Mat negatives = new Mat(amountOfNoPlates, 1, CvType.CV_32SC1, new Scalar(0.0));
 
+        //Utworzenie macierzy z 1 i 0
+        Mat labels = new Mat(0, 1, CvType.CV_32SC1);
+        labels.push_back(positives);
+        labels.push_back(negatives);
+
+        //System.out.println(labels.dump());
         CvSVMParams params = new CvSVMParams();
         params.set_svm_type(CvSVM.C_SVC);
         params.set_kernel_type(CvSVM.LINEAR);
@@ -110,35 +143,22 @@ public class SVMTrainCreator {
         params.set_C(1);
         params.set_nu(0);
         params.set_p(0);
-        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 200, 0.01);
+        TermCriteria tc = new TermCriteria(TermCriteria.MAX_ITER, 300, 0.01);
         params.set_term_crit(tc);
 
-        Size data = trainingImages.size();
-        Size label = labels.size();
+        svmClassifier.train(trainingImages, labels, new Mat(), new Mat(), params);
+        svmClassifier.save("SvmData.xml");
 
-        //CvSVM svmClassifier = new CvSVM(trainingImages, labels, new Mat(), new Mat(), params);
-        CvSVM svmClassifier = new CvSVM();
-
-        Mat temp1 = new Mat();
-        Mat temp2 = new Mat();
-        //temp1.convertTo(temp1, CvType.CV_32SC1);
-        //temp2.convertTo(temp2, CvType.CV_32SC1);
-
-        svmClassifier.train(trainingImages, labels, temp1, temp2, params);
-        //svmClassifier.save("test.xml");
-
-        //DZIAŁĄ KURWA DZIAŁA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        for (int i = 1; i < 11; i++) {
+        for (int i = 1; i < 9; i++) {
 
             //Mat cropImg = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
-            Mat temp = Highgui.imread("cropped_images\\cropped" + i + ".jpg", 0);
+            Mat temp = Highgui.imread("cropped_images\\" + i + ".jpg", 0);
             temp.convertTo(temp, CvType.CV_32FC1);
             temp = temp.reshape(1, 1);
 
             Size afterchanges = temp.size();
 
             //cropImg.push_back(temp);
-
             //Size testcrop = cropImg.size();
             Size testtemp = temp.size();
             float response = svmClassifier.predict(temp);
@@ -146,55 +166,26 @@ public class SVMTrainCreator {
             System.out.println("Response is equal: " + response);
         }
 
-        /*
-         ////////////////////////////////////////////////
-         //Kopia wszystkich fotek i konwersja
-         trainingImages.copyTo(trainingData);
-         trainingData.convertTo(trainingData, CvType.CV_32FC1);
+    }
 
-         //Konwersja listy oznaczeń "1" i "0" do postaci Mat
-         classes = Converters.vector_int_to_Mat(trainingLabels);
+    /**
+     * Loads training data into SVM classifier.
+     */
+    public void loadTrainingData() {
+        svmClassifier.load("SvmData.xml");
+    }
 
-         //Otwarcie pliku SVM.xml do zapisu poprzez inny rodzaj OpenCV - tu javacpp.
-         //W naszym OpenCV nie było wrappera do FileStorage niestety.
-         opencv_core.FileStorage fs = new opencv_core.FileStorage("SVM.xml", opencv_core.FileStorage.WRITE);
+    /**
+     * @return the svmClassifier
+     */
+    public CvSVM getSvmClassifier() {
+        return svmClassifier;
+    }
 
-         //Tu będzie zbiór wszystkich fotek w postaci Mat
-         opencv_core.Mat finalMat = null;
-
-         //KONWERSJA na opencv_core.Mat bo inaczej nie użyjemy fs.write
-         MatOfByte matOfByte = new MatOfByte();
-
-         Highgui.imencode(".jpg", trainingData, matOfByte);
-         byte[] byteArray = matOfByte.toArray();
-         BufferedImage buffImage = null;
-
-         try {
-
-         InputStream in = new ByteArrayInputStream(byteArray);
-         buffImage = ImageIO.read(in);
-         } catch (Exception e) {
-         e.printStackTrace();
-         }
-         finalMat = opencv_core.Mat.createFrom(buffImage);
-         //Koniec konwersji /////////////////////////////////////////////
-
-         //Zapis danych MAT do SVM.xml
-         opencv_core.write(fs, "TrainingData", finalMat);
-
-         /*
-         //Konwersja Listy do tablicy Integer       
-         Integer[] array = trainingLabels.toArray(new Integer[trainingLabels.size()]);
-
-         //Konwersja tablicy Integer do tablicy int...
-         int[] trainLabels = new int[array.length];
-         for (int i = 0; i < array.length; i++) {
-         trainLabels[i] = array[i];
-         }*/
-        //Utworzenie Mat z oznaczeniami i zapis do SVM.xml
-        //opencv_core.Mat trainLabelsMat = new opencv_core.Mat(trainLabels);
-        // opencv_core.write(fs, "TrainingLabels", trainLabelsMat);
-        //Zamknięcie SVM.xml
-        //fs.release();
+    /**
+     * @param svmClassifier the svmClassifier to set
+     */
+    public void setSvmClassifier(CvSVM svmClassifier) {
+        this.svmClassifier = svmClassifier;
     }
 }

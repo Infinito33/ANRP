@@ -2,17 +2,12 @@ package pl.biai.logic;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_core.FileNode;
-import org.bytedeco.javacpp.opencv_core.FileStorage;
-import org.bytedeco.javacpp.opencv_highgui;
-import org.bytedeco.javacpp.opencv_ml;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -261,7 +256,7 @@ public class PossiblePlateDetection {
             Mat equalizedImage = equalizeCroppedRect(croppedImage);
 
             Highgui.imwrite("cropped_images\\cropped" + rectCount + ".jpg", equalizedImage);
-            //Highgui.imwrite("cropped_images\\cropped" + testPlateCount + rectCount + ".jpg", equalizedImage);
+            //Highgui.imwrite("cropped_images\\cropped" + testPlateCount + "_" + rectCount + ".jpg", equalizedImage);
         }
     }
 
@@ -317,71 +312,23 @@ public class PossiblePlateDetection {
     }
 
     /**
-     * Filters all rectangles which might be plates.
+     * Filters all rectangles which might be plates, delete wrong ones and leave
+     * only one photo with car plate.
      */
-    public void filterPossiblePlates() {
-        //SVM for each plate region to get valid car plates
-        //Read file storage.
-        //OTWIERA PLIK SVM.xml Z DANYMI OBRAZÓW
-        opencv_core.FileStorage fs = new opencv_core.FileStorage("SVM.xml", opencv_core.FileStorage.READ);
-        //Mat SVM_TrainingData = new Mat();
-        //Mat SVM_Classes = new Mat();
+    public void photoFilter() {
         /*
-        //opencv_core.CvFileStorage cfs = new opencv_core.CvFileStorage();
-        //opencv_core.CvMemStorage storage = opencv_core.cvCreateMemStorage(0);
-        //cfs = opencv_core.cvOpenFileStorage("SVM.xml", storage, opencv_core.CV_STORAGE_READ, null);
-        //String ref_image = opencv_core.cvReadStringByName(cfs, null, "TrainingData", "");
-
-        opencv_core.Mat SVM_TrainingData = new opencv_core.Mat();
-        opencv_core.Mat SVM_Classes = new opencv_core.Mat();
-
-        opencv_core.FileNode dataNode = new FileNode();
-        opencv_core.FileNode labelsNode = new FileNode();
-
-        //BytePointer test = new BytePointer("TrainingData");
-        dataNode = fs.getFirstTopLevelNode();
-
-        labelsNode = fs.get("TrainingLabels");
-
-        opencv_core.read(dataNode, SVM_TrainingData);
-        opencv_core.read(labelsNode, SVM_Classes);
-    //boolean testing = SVM_TrainingData.isNull();
-
-        //fs["TrainingData"] >> SVM_TrainingData;
-        //fs["classes"] >> SVM_Classes;
-        //Set SVM params
-        opencv_core.CvTermCriteria criteria = opencv_core.cvTermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
-        opencv_ml.CvSVMParams SVM_params = new opencv_ml.CvSVMParams(opencv_ml.CvSVM.C_SVC, opencv_ml.CvSVM.LINEAR, 0, 1, 0, 1, 0, 0, null, criteria);
-
-        //SVM_params.term_crit = cvTermCriteria(CV_TERMCRIT_ITER, 1000, 0.01);
-        //Train SVM
-        opencv_ml.CvSVM svmClassifier = new opencv_ml.CvSVM(SVM_TrainingData, SVM_Classes, new opencv_core.Mat(), new opencv_core.Mat(), SVM_params);
-
-        for (int i = 1; i < 6; i++) {
-            opencv_core.Mat cropImg = opencv_highgui.imread("cropped_images\\cropped" + i + ".jpg");
-            cropImg = cropImg.reshape(1, 1);
-            cropImg.convertTo(cropImg, opencv_core.CV_32FC1);
-
-            int response = (int) svmClassifier.predict(cropImg);
-            if (response == 1) {
-                System.out.println("Znaleziono blachę! Numer: " + i);
-            }
-
-        }
-        */
-        
         TaFileStorage tfs = new TaFileStorage();
         tfs.open("SVM.xml", TaFileStorage.READ);
-        
+
         Mat SvmData = tfs.readMat("TrainingData");
         Mat SvmLabels = tfs.readMat("TrainingLabels");
-        
+
         SvmData.convertTo(SvmData, CvType.CV_32FC1);
         SvmLabels.convertTo(SvmLabels, CvType.CV_32FC1);
-        
+
         Size testa = SvmData.size();
         Size test = SvmLabels.size();
-        
+
         CvSVMParams params = new CvSVMParams();
         params.set_svm_type(CvSVM.C_SVC);
         params.set_kernel_type(CvSVM.LINEAR);
@@ -391,17 +338,16 @@ public class PossiblePlateDetection {
         params.set_C(1);
         params.set_nu(0);
         params.set_p(0);
-        TermCriteria tc = new TermCriteria(opencv_core.CV_TERMCRIT_ITER, 1000, 0.01);
+        TermCriteria tc = new TermCriteria(1, 1000, 0.01);
         params.set_term_crit(tc);
-                
+
         CvSVM svmClassifier = new CvSVM(SvmData, SvmLabels, new Mat(), new Mat(), params);
-        
-        
+
         for (int i = 1; i < 6; i++) {
             Mat cropImg = Highgui.imread("cropped_images\\cropped" + i + ".jpg");
             Size testb = cropImg.size();
-            cropImg = cropImg.reshape(1,1);
-            
+            cropImg = cropImg.reshape(1, 1);
+
             cropImg.convertTo(cropImg, CvType.CV_32FC1);
 
             int response = (int) svmClassifier.predict(cropImg);
@@ -410,7 +356,19 @@ public class PossiblePlateDetection {
             }
 
         }
+        */
         
+        File folder = new File("cropped_images");
+        File[] listOfFiles = folder.listFiles();
+        
+        for (File f : listOfFiles) {
+            
+        }
+        
+        SVMTrainCreator stc = new SVMTrainCreator();
+        stc.loadTrainingData();
+        
+
     }
 
     /**

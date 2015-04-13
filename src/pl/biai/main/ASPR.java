@@ -18,11 +18,11 @@ public class ASPR {
         //Loads native library - openCV won't work without this.
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-        //Gui gui = new Gui();
-        //gui.createGui();
+        Gui gui = new Gui();
+        gui.createGui();
         
-        SVMTrainCreator stc = new SVMTrainCreator(100, 50);
-        stc.prepareTrainingFile();
+        //SVMTrainCreator stc = new SVMTrainCreator();
+        //stc.prepareTrainingFile(195, 60);
 
     }
 
