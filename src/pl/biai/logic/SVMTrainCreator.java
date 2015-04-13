@@ -28,6 +28,7 @@ import org.opencv.utils.Converters;
  */
 public class SVMTrainCreator {
     //BUM CYK CKY
+    //CYKA CYKA BUM!
 
     /**
      * Path to photos with plates.
