@@ -2,14 +2,14 @@ package pl.biai.main;
 
 import org.opencv.core.*;
 import pl.biai.gui.Gui;
-import pl.biai.logic.SVMTrainCreator;
+import pl.biai.logic.SvmTrainer;
 
 /**
  * Automatic System of Plate Recognition
  *
  * @author Fufer
  */
-public class ASPR {
+public class APRS {
 
     /**
      * @param args the command line arguments
@@ -20,9 +20,6 @@ public class ASPR {
 
         Gui gui = new Gui();
         gui.createGui();
-        
-        //SVMTrainCreator stc = new SVMTrainCreator();
-        //stc.prepareTrainingFile(195, 60);
 
     }
 

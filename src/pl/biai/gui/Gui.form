@@ -165,8 +165,8 @@
                       <Component id="threshAndMorphButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="detectRectsButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="269" max="32767" attributes="0"/>
-                      <Component id="xmlTestButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="244" max="32767" attributes="0"/>
+                      <Component id="detectPlateButton" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -179,7 +179,7 @@
                           <Component id="greyAndNoiseRemoveButon" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="threshAndMorphButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="detectRectsButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="xmlTestButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="detectPlateButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
                   </Group>
@@ -211,12 +211,12 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="detectRectsButtonActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JButton" name="xmlTestButton">
+            <Component class="javax.swing.JButton" name="detectPlateButton">
               <Properties>
-                <Property name="text" type="java.lang.String" value="XML test"/>
+                <Property name="text" type="java.lang.String" value="Wykryj tablice"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="xmlTestButtonActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="detectPlateButtonActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>

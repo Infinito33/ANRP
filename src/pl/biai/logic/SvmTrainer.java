@@ -26,9 +26,7 @@ import org.opencv.utils.Converters;
  * @author Fufer
  * @version 1.0
  */
-public class SVMTrainCreator {
-    //BUM CYK CKY
-    //CYKA CYKA BUM!
+public class SvmTrainer {
 
     /**
      * Path to photos with plates.
@@ -70,7 +68,7 @@ public class SVMTrainCreator {
      * Initializes default amounts.
      *
      */
-    public SVMTrainCreator() {
+    public SvmTrainer() {
         this.pathPlates = "plateTraining\\plate\\";
         this.pathNoPlates = "plateTraining\\Noplate\\";
         this.amountOfPlates = 0;
@@ -135,7 +133,6 @@ public class SVMTrainCreator {
         labels.push_back(positives);
         labels.push_back(negatives);
 
-        //System.out.println(labels.dump());
         CvSVMParams params = new CvSVMParams();
         params.set_svm_type(CvSVM.C_SVC);
         params.set_kernel_type(CvSVM.LINEAR);
@@ -150,23 +147,6 @@ public class SVMTrainCreator {
 
         svmClassifier.train(trainingImages, labels, new Mat(), new Mat(), params);
         svmClassifier.save("SvmData.xml");
-
-        for (int i = 1; i < 9; i++) {
-
-            //Mat cropImg = new Mat(0, imageWidth * imageHeight, CvType.CV_32FC1);
-            Mat temp = Highgui.imread("cropped_images\\" + i + ".jpg", 0);
-            temp.convertTo(temp, CvType.CV_32FC1);
-            temp = temp.reshape(1, 1);
-
-            Size afterchanges = temp.size();
-
-            //cropImg.push_back(temp);
-            //Size testcrop = cropImg.size();
-            Size testtemp = temp.size();
-            float response = svmClassifier.predict(temp);
-
-            System.out.println("Response is equal: " + response);
-        }
 
     }
 

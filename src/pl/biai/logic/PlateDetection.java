@@ -29,7 +29,7 @@ import org.opencv.ml.CvSVMParams;
  * @author Fufer
  * @version 1.0
  */
-public class PossiblePlateDetection {
+public class PlateDetection {
 
     /**
      * Photo with plates loaded by file chooser.
@@ -58,7 +58,7 @@ public class PossiblePlateDetection {
     /**
      * Constructor.
      */
-    public PossiblePlateDetection() {
+    public PlateDetection() {
 
     }
 
@@ -312,62 +312,40 @@ public class PossiblePlateDetection {
     }
 
     /**
-     * Filters all rectangles which might be plates, delete wrong ones and leave
+     * Filters all photos which might be plates, delete wrong ones and leave
      * only one photo with car plate.
+     *
+     * @return True if plate was detected, otherwise false.
      */
-    public void photoFilter() {
-        /*
-        TaFileStorage tfs = new TaFileStorage();
-        tfs.open("SVM.xml", TaFileStorage.READ);
+    public boolean photoFilter() {
+        SvmTrainer stc = new SvmTrainer();
+        stc.loadTrainingData();
 
-        Mat SvmData = tfs.readMat("TrainingData");
-        Mat SvmLabels = tfs.readMat("TrainingLabels");
-
-        SvmData.convertTo(SvmData, CvType.CV_32FC1);
-        SvmLabels.convertTo(SvmLabels, CvType.CV_32FC1);
-
-        Size testa = SvmData.size();
-        Size test = SvmLabels.size();
-
-        CvSVMParams params = new CvSVMParams();
-        params.set_svm_type(CvSVM.C_SVC);
-        params.set_kernel_type(CvSVM.LINEAR);
-        params.set_degree(0);
-        params.set_gamma(1);
-        params.set_coef0(0);
-        params.set_C(1);
-        params.set_nu(0);
-        params.set_p(0);
-        TermCriteria tc = new TermCriteria(1, 1000, 0.01);
-        params.set_term_crit(tc);
-
-        CvSVM svmClassifier = new CvSVM(SvmData, SvmLabels, new Mat(), new Mat(), params);
-
-        for (int i = 1; i < 6; i++) {
-            Mat cropImg = Highgui.imread("cropped_images\\cropped" + i + ".jpg");
-            Size testb = cropImg.size();
-            cropImg = cropImg.reshape(1, 1);
-
-            cropImg.convertTo(cropImg, CvType.CV_32FC1);
-
-            int response = (int) svmClassifier.predict(cropImg);
-            if (response == 1) {
-                System.out.println("Znaleziono blachę! Numer: " + i);
-            }
-
-        }
-        */
-        
         File folder = new File("cropped_images");
         File[] listOfFiles = folder.listFiles();
-        
+
+        String platePhotoPath = "";
+
         for (File f : listOfFiles) {
-            
+            String path = f.getAbsolutePath();
+            if (path.contains(".jpg")) {
+
+                Mat photo = Highgui.imread(path, 0);
+                photo.convertTo(photo, CvType.CV_32FC1);
+                photo = photo.reshape(1, 1);
+
+                float response = stc.getSvmClassifier().predict(photo);
+
+                System.out.println("Response is equal: " + response);
+
+                if (response == 1.0) {
+                    platePhotoPath = path;
+                } else {
+                    f.delete();
+                }
+            }
         }
-        
-        SVMTrainCreator stc = new SVMTrainCreator();
-        stc.loadTrainingData();
-        
+        return !platePhotoPath.equals("");
 
     }
 

@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import pl.biai.logic.PossiblePlateDetection;
+import pl.biai.logic.PlateDetection;
 
 /**
  *
@@ -19,7 +19,7 @@ public class Gui extends javax.swing.JFrame {
     /**
      * Logic class of photo edition algorithms.
      */
-    private PossiblePlateDetection pe;
+    private PlateDetection pe;
 
     /**
      * Image converted from Mat object for displaying on the screen. Check
@@ -32,7 +32,7 @@ public class Gui extends javax.swing.JFrame {
      */
     public Gui() {
         initComponents();
-        pe = new PossiblePlateDetection();
+        pe = new PlateDetection();
         //createCroppedTables();
     }
 
@@ -42,12 +42,12 @@ public class Gui extends javax.swing.JFrame {
     public void createCroppedTables() {
         for (int i = 1; i < 179; i++) {
             String path = "C:\\Users\\tomol_000\\Desktop\\blachy\\" + i + ".jpg";
-            PossiblePlateDetection.setFilePath(path);
+            PlateDetection.setFilePath(path);
             pe.loadPhotoToMat();
             pe.makeCleanAndSobel();
             pe.makeThresholdAndMorphology();
             pe.findPossiblePlateRects();
-            PossiblePlateDetection.testPlateCount++;
+            PlateDetection.testPlateCount++;
         }
     }
 
@@ -78,7 +78,7 @@ public class Gui extends javax.swing.JFrame {
         greyAndNoiseRemoveButon = new javax.swing.JButton();
         threshAndMorphButton = new javax.swing.JButton();
         detectRectsButton = new javax.swing.JButton();
-        xmlTestButton = new javax.swing.JButton();
+        detectPlateButton = new javax.swing.JButton();
         guiMenuBar = new javax.swing.JMenuBar();
         guiFirstMenu = new javax.swing.JMenu();
         guiFirstMenuItem1 = new javax.swing.JMenuItem();
@@ -140,10 +140,10 @@ public class Gui extends javax.swing.JFrame {
             }
         });
 
-        xmlTestButton.setText("XML test");
-        xmlTestButton.addActionListener(new java.awt.event.ActionListener() {
+        detectPlateButton.setText("Wykryj tablice");
+        detectPlateButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                xmlTestButtonActionPerformed(evt);
+                detectPlateButtonActionPerformed(evt);
             }
         });
 
@@ -158,8 +158,8 @@ public class Gui extends javax.swing.JFrame {
                 .addComponent(threshAndMorphButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(detectRectsButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 269, Short.MAX_VALUE)
-                .addComponent(xmlTestButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 244, Short.MAX_VALUE)
+                .addComponent(detectPlateButton)
                 .addContainerGap())
         );
         guiOptionsPanelLayout.setVerticalGroup(
@@ -170,7 +170,7 @@ public class Gui extends javax.swing.JFrame {
                     .addComponent(greyAndNoiseRemoveButon)
                     .addComponent(threshAndMorphButton)
                     .addComponent(detectRectsButton)
-                    .addComponent(xmlTestButton))
+                    .addComponent(detectPlateButton))
                 .addGap(36, 36, 36))
         );
 
@@ -216,12 +216,12 @@ public class Gui extends javax.swing.JFrame {
          guiPhotoChooser.setVisible(true);
          File selectedFile = guiPhotoChooser.getSelectedFile();
         
-         PossiblePlateDetection.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
+         PlateDetection.setFilePath(guiPhotoChooser.getSelectedFile().getAbsolutePath());
          */
 
-        String path = "C:\\Users\\tomol_000\\Desktop\\ANRP\\src\\resources\\test3.jpg";
+        String path = "C:\\Users\\tomol_000\\Desktop\\ANRP\\176.jpg";
         //String path = "C:\\Users\\tomol_000\\Desktop\\ANRP BIAI Project\\ANRP\\src\\resources\\test3.jpg";
-        PossiblePlateDetection.setFilePath(path);
+        PlateDetection.setFilePath(path);
 
         pe.loadPhotoToMat();
         pe.updatePhoto(false);
@@ -267,9 +267,18 @@ public class Gui extends javax.swing.JFrame {
         guiPhotoPanel.repaint();
     }//GEN-LAST:event_detectRectsButtonActionPerformed
 
-    private void xmlTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_xmlTestButtonActionPerformed
-        pe.photoFilter();
-    }//GEN-LAST:event_xmlTestButtonActionPerformed
+    private void detectPlateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detectPlateButtonActionPerformed
+        pe.makeCleanAndSobel();
+        pe.makeThresholdAndMorphology();
+        pe.findPossiblePlateRects();
+        boolean ifFound = pe.photoFilter();
+        
+        if(ifFound == true) {
+            System.out.println("Wykryto tablicę!");
+        } else {
+            System.out.println("Nie wykryto tablicy.");
+        }
+    }//GEN-LAST:event_detectPlateButtonActionPerformed
 
     /**
      * Creates GUI of application.
@@ -308,6 +317,7 @@ public class Gui extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton detectPlateButton;
     private javax.swing.JButton detectRectsButton;
     private javax.swing.JButton greyAndNoiseRemoveButon;
     private javax.swing.JMenu guiFirstMenu;
@@ -319,6 +329,5 @@ public class Gui extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JButton threshAndMorphButton;
-    private javax.swing.JButton xmlTestButton;
     // End of variables declaration//GEN-END:variables
 }
